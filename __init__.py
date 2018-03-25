@@ -7,8 +7,9 @@ ContactForm
 Dependencies
 ------------
 
-a. ``email``
-b. ``smtplib``
+a. ``datetime``
+b. ``email``
+c. ``smtplib``
 
 Usage
 -----
@@ -16,11 +17,12 @@ Usage
 TODO
 """
 
+import datetime
 import smtplib
+from email.mime.text import MIMEText
+
 from kivy.app import App
 from kivy.lang import Builder
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from kivy.uix.floatlayout import FloatLayout
 
 __author__ = "Muhammed Yasin Yildirim"
@@ -34,13 +36,14 @@ Builder.load_string('''
         Label:
             id: txt_name
             text: "Name:"
-            multiline: False
-            size_hint: .1, .1
+            halign: "right"
+            valign: "middle"
+            text_size: self.width / 10, self.height / 10
+            size: self.texture_size
             pos_hint: {"center_x": .1, "center_y": .9}
 
         TextInput:
             id: input_name
-            hint_text: "Elon Musk"
             write_tab: False
             multiline: False
             padding_y: [self.height / 3, 0]
@@ -49,14 +52,15 @@ Builder.load_string('''
             
         Label:
             id: txt_email
-            text: "E-mail:"
-            multiline: False
-            size_hint: .1, .1
+            text: "* E-mail:"
+            halign: "right"
+            valign: "middle"
+            text_size: self.width / 10, self.height / 10
+            size: self.texture_size
             pos_hint: {"center_x": .1, "center_y": .75}
 
         TextInput:
             id: input_email
-            hint_text: "elon@spacex.com"
             write_tab: False
             multiline: False
             input_type: "mail"
@@ -67,13 +71,14 @@ Builder.load_string('''
         Label:
             id: txt_subject
             text: "Subject:"
-            multiline: False
-            size_hint: .1, .1
+            halign: "right"
+            valign: "middle"
+            text_size: self.width / 10, self.height / 10
+            size: self.texture_size
             pos_hint: {"center_x": .1, "center_y": .6}
 
         TextInput:
             id: input_subject
-            hint_text: "About Space"
             write_tab: False
             multiline: False
             padding_y: [self.height / 3, 0]
@@ -82,40 +87,87 @@ Builder.load_string('''
             
         Label:
             id: txt_message
-            text: "Message:"
-            multiline: False
-            size_hint: .1, .1
+            text: "* Message:"
+            halign: "right"
+            valign: "middle"
+            text_size: self.width / 10, self.height / 10
+            size: self.texture_size
             pos_hint: {"center_x": .1, "center_y": .45}
 
         TextInput:
             id: input_message
-            hint_text: "Have you ever been in Mars?"
             padding_y: [self.height / 9, 0]
             size_hint: .7, .3
             pos_hint: {"center_x": .6, "y": .2}
+            
+        Button:
+            id: btn_send
+            text: "SEND"
+            size_hint: .3, .1
+            pos_hint: {"center_x": .6, "center_y": .1}
+            on_release: root.send()
+            
+        Image:
+            id: img_status
+            source: "img/ico_warning.png"
+            opacity: 0
+            size_hint_x: .075
+            pos_hint: {"center_x": .8, "center_y": .1}
 ''')
 
 
 class ContactForm(FloatLayout):
     """TODO"""
 
-    def __init__(self, size, text_color, **kwargs):
+    def __init__(self, host, tls_port, username, password, receivers, pos=None, text_color=None, **kwargs):
         super(ContactForm, self).__init__(**kwargs)
-        self.size = size
+        self.host = host
+        self.tls_port = tls_port
+        self.username = username
+        self.password = password
+        self.receivers = receivers
+        self.pos = pos
         self.text_color = text_color
-        self.__update__()
+        self.update()
 
-    def __update__(self):
-        labels = [self.ids.txt_name, self.ids.txt_email, self.ids.txt_subject, self.ids.txt_message]
-        for i in labels:
-            i.color = self.text_color
+    def update(self):
+        if self.pos is not None:
+            self.ids["layout_form"].pos = self.pos
+
+        if self.text_color is not None:
+            for i in [self.ids.txt_name, self.ids.txt_email, self.ids.txt_subject, self.ids.txt_message]:
+                i.color = self.text_color
+
+    def send(self):
+        self.ids["img_status"].opacity = 0
+
+        if (self.ids["input_email"] and self.ids["input_message"]).text.replace(" ", "") == "":
+            self.ids["img_status"].source = "img/ico_warning.png"
+            self.ids["img_status"].opacity = 1
+        else:
+            try:
+                server = smtplib.SMTP(self.host, self.tls_port)
+                server.starttls()
+                server.login(self.username, self.password)
+
+                message = MIMEText("%s sent a message via ContactForm (%s):\n\n%s" % (self.ids["input_name"].text, datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y"), self.ids["input_message"].text))
+                message["Subject"] = "via ContactForm: %s" % self.ids["input_subject"].text
+
+                server.sendmail(self.username, self.receivers, message.as_string())
+                server.quit()
+
+                self.ids["img_status"].source = "img/ico_success.png"
+                self.ids["img_status"].opacity = 1
+            except:
+                self.ids["img_status"].source = "img/ico_error.png"
+                self.ids["img_status"].opacity = 1
 
 
 class myApp(App):
     """TODO"""
 
     def build(self):
-        return ContactForm(size=(100, 100), text_color=(1, 0, 0, 1))
+        return ContactForm(host="smtp.gmail.com", tls_port=587, username="myapp@gmail.com", password="123456", receivers=["me@gmail.com", "pr@gmail.com"], pos=(10, 10), text_color=(1, 1, 1, 1))
 
 
 if __name__ == "__main__":
