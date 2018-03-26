@@ -17,7 +17,7 @@ c. ``smtplib``
 Usage
 -----
 
-from kivy.garden.ContactForm import ContactForm
+from kivy.garden.contactform import ContactForm
 myContactForm = ContactForm(host="smtp.gmail.com", tls_port=587,
                             username="myapp@gmail.com", password="123456",
                             receivers=["me@gmail.com", "pr@gmail.com"],
