@@ -5,7 +5,7 @@
 ContactForm
 ===========
 
-:class: `ContactForm` provides a Kivy widget for sending e-mails to specified addresses within apps.
+:class: `ContactForm` provides a Kivy widget for sending e-mail to specified addresses from a form on app.
 
 Dependencies
 ------------
@@ -18,8 +18,10 @@ Usage
 -----
 
 from kivy.garden.ContactForm import ContactForm
-myContactForm = ContactForm(host="smtp.gmail.com", tls_port=587, username="myapp@gmail.com", password="123456",
-                            receivers=["me@gmail.com", "pr@gmail.com"], pos=(10, 10), text_color=(1, 1, 1, 1))
+myContactForm = ContactForm(host="smtp.gmail.com", tls_port=587,
+                            username="myapp@gmail.com", password="123456",
+                            receivers=["me@gmail.com", "pr@gmail.com"],
+                            size=(750, 600), pos=(0, 0), text_color=(1, 0, 0, 1))
 """
 
 import smtplib
@@ -30,14 +32,21 @@ from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.floatlayout import FloatLayout
 
-__author__ = "Muhammed Yasin Yildirim"
-__credits__ = ["Ali Emre Oz", "Fatih Cagatay Gulmez"]
+__author__ = "Muhammed Yasin Yıldırım"
+__credits__ = ["Ali Emre Öz", "Fatih Çağatay Gülmez"]
 
 Builder.load_string('''
 <ContactForm>
     FloatLayout:
         id: layout_form
+        size_hint: None, None
     
+        canvas.before:
+            Rectangle:
+                source: "bg_gray.png"
+                size: self.size
+                pos: self.pos
+                
         Label:
             id: txt_name
             text: "Name:"
@@ -122,27 +131,42 @@ Builder.load_string('''
 
 
 class ContactForm(FloatLayout):
-    """TODO"""
+    """
+    Provides a widget for sending e-mail to specified addresses from a form on app.
+    """
 
-    def __init__(self, host, tls_port, username, password, receivers, pos=None, text_color=None, **kwargs):
+    def __init__(self, host, tls_port, username, password, receivers, size, pos, text_color=None, **kwargs):
+        """
+        Assigns given inputs to the self parameter and then calls the update method.
+        :param host: SMTP server of the account used for sending e-mails.
+        :param tls_port: SMTP port of the account used for sending e-mails.
+        :param username: E-mail address of the account used for sending e-mails.
+        :param password: Password of the account used for sending e-mails.
+        :param receivers: List of e-mail addresses that will receive e-mails.
+        :param size: Size of the contact form.
+        :param pos: Position of the contact form on app.
+        :param text_color: Text color of the labels used on the contact form.
+        """
+
         super(ContactForm, self).__init__(**kwargs)
         self.host = host
         self.tls_port = tls_port
         self.username = username
         self.password = password
         self.receivers = receivers
+        self.size = size
         self.pos = pos
         self.text_color = text_color
         self.update()
 
     def update(self):
         """
-        Updates position of the form as well as text color of the labels if specified.
-        Otherwise; position is set to (0, 0), text color is set to (0, 0, 0, 1) as default.
+        Updates size and position of the form as well as text color of the labels if specified.
+        Otherwise, text color is set to (0, 0, 0, 1) as default.
         """
 
-        if self.pos is not None:
-            self.ids["layout_form"].pos = self.pos
+        self.ids["layout_form"].size = self.size
+        self.ids["layout_form"].pos = self.pos
 
         if self.text_color is not None:
             labels = [
@@ -158,7 +182,7 @@ class ContactForm(FloatLayout):
     def send(self):
         """
         Sends user's message with given information to specified addresses
-        through provided e-mail account when send button is clicked.
+        through provided e-mail account when the send button is clicked.
         """
 
         self.ids["img_status"].opacity = 0
@@ -174,20 +198,21 @@ class ContactForm(FloatLayout):
 
                 time = datetime.now().strftime("%I:%M%p on %B %d, %Y")
 
-                message = MIMEText("%s sent a message via ContactForm (%s):\n\n%s" % (self.ids["input_name"].text,
-                                                                                      time,
-                                                                                      self.ids["input_message"].text))
-                message["Subject"] = "via ContactForm: %s" % self.ids["input_subject"].text
-
-                server.sendmail(self.username, self.receivers, message.as_string())
-                server.quit()
-
                 inputs = [
                     self.ids["input_name"],
                     self.ids["input_email"],
                     self.ids["input_subject"],
                     self.ids["input_message"]
                 ]
+
+                message = MIMEText("%s (%s) sent a message via ContactForm (%s):\n\n%s" % (inputs[1].text,
+                                                                                           inputs[0].text,
+                                                                                           time,
+                                                                                           inputs[3].text))
+                message["Subject"] = "via ContactForm: %s" % inputs[2].text
+
+                server.sendmail(self.username, self.receivers, message.as_string())
+                server.quit()
 
                 for i in inputs:
                     i.text = ""
@@ -201,8 +226,10 @@ class ContactForm(FloatLayout):
 
 class myApp(App):
     def build(self):
-        return ContactForm(host="smtp.gmail.com", tls_port=587, username="myapp@gmail.com", password="123456",
-                           receivers=["me@gmail.com", "pr@gmail.com"], pos=(10, 10), text_color=(1, 1, 1, 1))
+        return ContactForm(host="smtp.gmail.com", tls_port=587,
+                           username="myapp@gmail.com", password="123456",
+                           receivers=["me@gmail.com", "pr@gmail.com"],
+                           size=(750, 600), pos=(0, 0), text_color=(1, 1, 1, 1))
 
 
 if __name__ == "__main__":
