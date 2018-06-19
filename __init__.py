@@ -46,7 +46,7 @@ Builder.load_string('''
     
         # canvas.before:
         #     Rectangle:
-        #         source: "bg_gray.png"
+        #         source: "img/bg_gray.png"
         #         size: self.size
         #         pos: self.pos
                 
@@ -126,7 +126,7 @@ Builder.load_string('''
             
         # Image:
         #     id: img_status
-        #     source: "ico_warning.png"
+        #     source: "img/ico_warning.png"
         #     opacity: 0
         #     size_hint_x: .075
         #     pos_hint: {"center_x": .8, "center_y": .1}
@@ -218,7 +218,7 @@ class ContactForm(FloatLayout):
         self.ids["btn_send"].disabled = True
 
         if not (self.ids["input_email"].text.strip() and self.ids["input_message"].text.strip()):
-            # self.ids["img_status"].source = "ico_warning.png"
+            # self.ids["img_status"].source = "img/ico_warning.png"
 
             self.txt_info.text = "Please fill the required fields!"
         else:
@@ -248,11 +248,11 @@ class ContactForm(FloatLayout):
                 for i in inputs:
                     i.text = ""
 
-                # self.ids["img_status"].source = "ico_success.png"
+                # self.ids["img_status"].source = "img/ico_success.png"
 
                 self.txt_info.text = "Your message has been successfully sent!"
             except smtplib.SMTPException:
-                # self.ids["img_status"].source = "ico_error.png"
+                # self.ids["img_status"].source = "img/ico_error.png"
 
                 self.txt_info.text = "Delivery of your message has been failed!"
 
@@ -271,7 +271,7 @@ class myApp(App):
     def build(self):
         """
         Initializes the demo app.
-        :return: Contact form.
+        :return: Contact form as root widget.
         """
 
         return ContactForm(
