@@ -44,11 +44,11 @@ Builder.load_string('''
         id: layout_form
         size_hint: None, None
     
-        canvas.before:
-            Rectangle:
-                source: "bg_gray.png"
-                size: self.size
-                pos: self.pos
+        # canvas.before:
+        #     Rectangle:
+        #         source: "bg_gray.png"
+        #         size: self.size
+        #         pos: self.pos
                 
         Label:
             id: txt_name
@@ -153,6 +153,7 @@ class ContactForm(FloatLayout):
         """
 
         super(ContactForm, self).__init__(**kwargs)
+
         self.host = host
         self.tls_port = tls_port
         self.username = username
@@ -162,31 +163,35 @@ class ContactForm(FloatLayout):
         self.pos = pos
         self.text_color = text_color
 
-        self.content = FloatLayout()
+        self.layout_popup = FloatLayout()
         self.popup = Popup(
             title="Information",
-            content=self.content,
+            content=self.layout_popup,
             size_hint=(None, None),
             size=(self.width / 2, self.height / 2)
         )
-        self.txt_info = Label(size_hint_y = .8,
-                              pos_hint={"center_x": .5, "y": .2}
-                              )
-        self.content.add_widget(self.txt_info)
-        self.content.add_widget(Button(text="Close",
-                                       size_hint_y = .2,
-                                       pos_hint={"center_x": .5, "y": 0},
-                                       on_release=self.popup.dismiss
-                                       )
-                                )
+        self.txt_info = Label(
+            size_hint_y=.8,
+            pos_hint={"center_x": .5, "y": .2}
+        )
 
         self.update()
 
     def update(self):
         """
-        Updates size and position of the form as well as text color of the labels if specified.
-        Otherwise, text color is set to (0, 0, 0, 1) as default.
+        Updates size and position of the form along with content of the information pop-up
+        as well as text color of the labels if specified. Otherwise, sets to (0, 0, 0, 1) as default.
         """
+
+        self.layout_popup.add_widget(self.txt_info)
+        self.layout_popup.add_widget(
+            Button(
+                text="Close",
+                size_hint_y=.2,
+                pos_hint={"center_x": .5, "y": 0},
+                on_release=self.popup.dismiss
+            )
+        )
 
         self.ids["layout_form"].size = self.size
         self.ids["layout_form"].pos = self.pos
