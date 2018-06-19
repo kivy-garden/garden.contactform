@@ -30,6 +30,9 @@ from email.mime.text import MIMEText
 
 from kivy.app import App
 from kivy.lang import Builder
+from kivy.uix.label import Label
+from kivy.uix.popup import Popup
+from kivy.uix.button import Button
 from kivy.uix.floatlayout import FloatLayout
 
 __author__ = "Muhammed Yasin Yıldırım"
@@ -121,12 +124,12 @@ Builder.load_string('''
             pos_hint: {"center_x": .6, "center_y": .1}
             on_release: root.send()
             
-        Image:
-            id: img_status
-            source: "ico_warning.png"
-            opacity: 0
-            size_hint_x: .075
-            pos_hint: {"center_x": .8, "center_y": .1}
+        # Image:
+        #     id: img_status
+        #     source: "ico_warning.png"
+        #     opacity: 0
+        #     size_hint_x: .075
+        #     pos_hint: {"center_x": .8, "center_y": .1}
 ''')
 
 
@@ -137,7 +140,8 @@ class ContactForm(FloatLayout):
 
     def __init__(self, host, tls_port, username, password, receivers, size, pos, text_color=None, **kwargs):
         """
-        Assigns given inputs to the self parameter and then calls the update method.
+        Assigns given inputs and information pop-up to the self parameter,
+        then calls the update method for further changes.
         :param host: SMTP server of the account used for sending e-mails.
         :param tls_port: SMTP port of the account used for sending e-mails.
         :param username: E-mail address of the account used for sending e-mails.
@@ -157,6 +161,25 @@ class ContactForm(FloatLayout):
         self.size = size
         self.pos = pos
         self.text_color = text_color
+
+        self.content = FloatLayout()
+        self.popup = Popup(
+            title="Information",
+            content=self.content,
+            size_hint=(None, None),
+            size=(self.width / 2, self.height / 2)
+        )
+        self.txt_info = Label(size_hint_y = .8,
+                              pos_hint={"center_x": .5, "y": .2}
+                              )
+        self.content.add_widget(self.txt_info)
+        self.content.add_widget(Button(text="Close",
+                                       size_hint_y = .2,
+                                       pos_hint={"center_x": .5, "y": 0},
+                                       on_release=self.popup.dismiss
+                                       )
+                                )
+
         self.update()
 
     def update(self):
@@ -182,21 +205,24 @@ class ContactForm(FloatLayout):
     def send(self):
         """
         Sends user's message with given information to specified addresses
-        through provided e-mail account when the send button is clicked.
+        through e-mail account provided when the send button is clicked.
         """
 
-        self.ids["img_status"].opacity = 0
+        # self.ids["img_status"].opacity = 0
+
+        self.ids["btn_send"].disabled = True
 
         if not (self.ids["input_email"].text.strip() and self.ids["input_message"].text.strip()):
-            self.ids["img_status"].source = "ico_warning.png"
-            self.ids["img_status"].opacity = 1
+            # self.ids["img_status"].source = "ico_warning.png"
+
+            self.txt_info.text = "Please fill the required fields!"
         else:
             try:
                 server = smtplib.SMTP(self.host, self.tls_port)
                 server.starttls()
                 server.login(self.username, self.password)
 
-                time = datetime.now().strftime("%I:%M%p on %B %d, %Y")
+                curr_time = datetime.now().strftime("%I:%M%p on %B %d, %Y")
 
                 inputs = [
                     self.ids["input_name"],
@@ -205,10 +231,10 @@ class ContactForm(FloatLayout):
                     self.ids["input_message"]
                 ]
 
-                message = MIMEText("%s (%s) sent a message via ContactForm (%s):\n\n%s" % (inputs[1].text,
-                                                                                           inputs[0].text,
-                                                                                           time,
-                                                                                           inputs[3].text))
+                message = MIMEText("%s (%s) sent a message via ContactForm (%s):\n\n%s" % (inputs[1].text,   # E-mail
+                                                                                           inputs[0].text,   # Name
+                                                                                           curr_time,
+                                                                                           inputs[3].text))  # Message
                 message["Subject"] = "via ContactForm: %s" % inputs[2].text
 
                 server.sendmail(self.username, self.receivers, message.as_string())
@@ -217,19 +243,42 @@ class ContactForm(FloatLayout):
                 for i in inputs:
                     i.text = ""
 
-                self.ids["img_status"].source = "ico_success.png"
-                self.ids["img_status"].opacity = 1
+                # self.ids["img_status"].source = "ico_success.png"
+
+                self.txt_info.text = "Your message has been successfully sent!"
             except smtplib.SMTPException:
-                self.ids["img_status"].source = "ico_error.png"
-                self.ids["img_status"].opacity = 1
+                # self.ids["img_status"].source = "ico_error.png"
+
+                self.txt_info.text = "Delivery of your message has been failed!"
+
+        # self.ids["img_status"].opacity = 1
+
+        self.popup.open()
+        self.ids["btn_send"].disabled = False
 
 
 class myApp(App):
+    """
+    Demo app that consists of a contact form,
+    change the credentials below if you want to test it.
+    """
+
     def build(self):
-        return ContactForm(host="smtp.gmail.com", tls_port=587,
-                           username="myapp@gmail.com", password="123456",
-                           receivers=["me@gmail.com", "pr@gmail.com"],
-                           size=(750, 600), pos=(0, 0), text_color=(1, 1, 1, 1))
+        """
+        Initializes the demo app.
+        :return: Contact form.
+        """
+
+        return ContactForm(
+            host="smtp.gmail.com",
+            tls_port=587,
+            username="myapp@gmail.com",
+            password="123456",
+            receivers=["me@gmail.com", "pr@gmail.com"],
+            size=(750, 600),
+            pos=(0, 0),
+            text_color=(1, 1, 1, 1)
+        )
 
 
 if __name__ == "__main__":
